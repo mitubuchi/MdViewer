@@ -1,0 +1,83 @@
+<Window x:Class="MdViewerApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MD / SVG Viewer" Height="820" Width="1120"
+        FontFamily="Meiryo, Yu Gothic UI"
+        AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver"
+        PreviewMouseWheel="Window_PreviewMouseWheel">
+
+    <Window.CommandBindings>
+        <CommandBinding Command="Open"        Executed="OpenExecuted" />
+        <CommandBinding Command="Close"       Executed="CloseExecuted"     CanExecute="HasTab" />
+        <CommandBinding Command="IncreaseZoom" Executed="ZoomInExecuted"   CanExecute="HasTab" />
+        <CommandBinding Command="DecreaseZoom" Executed="ZoomOutExecuted"  CanExecute="HasTab" />
+    </Window.CommandBindings>
+
+    <Window.InputBindings>
+        <KeyBinding Command="Open"         Key="O"        Modifiers="Ctrl" />
+        <KeyBinding Command="Close"        Key="W"        Modifiers="Ctrl" />
+        <KeyBinding Command="IncreaseZoom" Key="OemPlus"  Modifiers="Ctrl" />
+        <KeyBinding Command="IncreaseZoom" Key="Add"      Modifiers="Ctrl" />
+        <KeyBinding Command="DecreaseZoom" Key="OemMinus" Modifiers="Ctrl" />
+        <KeyBinding Command="DecreaseZoom" Key="Subtract" Modifiers="Ctrl" />
+    </Window.InputBindings>
+
+    <DockPanel>
+
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="ファイル(_F)">
+                <MenuItem Header="開く(_O)..." Command="Open"  InputGestureText="Ctrl+O" />
+                <MenuItem Header="閉じる(_C)"  Command="Close" InputGestureText="Ctrl+W" />
+                <Separator />
+                <MenuItem Header="終了(_X)" Click="ExitClick" />
+            </MenuItem>
+            <MenuItem Header="表示(_V)">
+                <MenuItem Header="拡大(_I)" Command="IncreaseZoom" InputGestureText="Ctrl++" />
+                <MenuItem Header="縮小(_O)" Command="DecreaseZoom" InputGestureText="Ctrl+-" />
+                <MenuItem Header="標準に戻す(_R)" Click="ZoomResetClick" InputGestureText="Ctrl+0" />
+            </MenuItem>
+        </Menu>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <DockPanel />
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+
+            <!-- DockPanel は最後の子が残り幅を占めるため、右寄せを先に置く -->
+            <StatusBarItem DockPanel.Dock="Right">
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="－" Command="DecreaseZoom" Width="24" Height="20"
+                            Padding="0" ToolTip="縮小 (Ctrl+-)" />
+                    <TextBlock x:Name="textZoom" Text="100%" Width="52"
+                               TextAlignment="Center" VerticalAlignment="Center" />
+                    <Button Content="＋" Command="IncreaseZoom" Width="24" Height="20"
+                            Padding="0" ToolTip="拡大 (Ctrl++)" />
+                    <Button Content="標準" Click="ZoomResetClick" Width="40" Height="20"
+                            Margin="6,0,0,0" Padding="0" ToolTip="標準に戻す (Ctrl+0)" />
+                </StackPanel>
+            </StatusBarItem>
+
+            <StatusBarItem>
+                <!-- 長いパスは省略表示にして、右側のボタンを押し出さないようにする -->
+                <TextBlock x:Name="textStatus" TextTrimming="CharacterEllipsis"
+                           Text="ファイルを開いてください（Ctrl+O、またはドラッグ＆ドロップ）" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid>
+            <!-- 開いているファイルをタブで切り替える。表示のみで編集はできない -->
+            <TabControl x:Name="tabs" Margin="6"
+                        SelectionChanged="tabs_SelectionChanged" />
+
+            <!-- 1 つも開いていないときの案内 -->
+            <TextBlock x:Name="textEmpty"
+                       Text="ファイルを開いてください&#x0a;&#x0a;メニュー ファイル ▸ 開く（Ctrl+O）&#x0a;またはウィンドウにファイルをドラッグ＆ドロップ"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       TextAlignment="Center" Foreground="#999" FontSize="14"
+                       IsHitTestVisible="False" />
+        </Grid>
+
+    </DockPanel>
+</Window>

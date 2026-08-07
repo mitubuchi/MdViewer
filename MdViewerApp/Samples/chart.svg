@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200">
+  <rect x="0" y="0" width="360" height="200" fill="#FAFAFA" stroke="#DDD"/>
+  <line x1="40" y1="170" x2="340" y2="170" stroke="#888" stroke-width="2"/>
+  <line x1="40" y1="20"  x2="40"  y2="170" stroke="#888" stroke-width="2"/>
+  <rect x="60"  y="110" width="40" height="60"  fill="#4A90D9"/>
+  <rect x="120" y="70"  width="40" height="100" fill="#4A90D9"/>
+  <rect x="180" y="40"  width="40" height="130" fill="#3DB16A"/>
+  <rect x="240" y="90"  width="40" height="80"  fill="#E0533D"/>
+  <text x="80"  y="188" font-size="12" text-anchor="middle" fill="#333">Q1</text>
+  <text x="140" y="188" font-size="12" text-anchor="middle" fill="#333">Q2</text>
+  <text x="200" y="188" font-size="12" text-anchor="middle" fill="#333">Q3</text>
+  <text x="260" y="188" font-size="12" text-anchor="middle" fill="#333">Q4</text>
+  <text x="190" y="16"  font-size="13" text-anchor="middle" fill="#333">売上推移</text>
+</svg>

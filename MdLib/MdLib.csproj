@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Markdown の解析だけを行うため WPF 依存が無く、netstandard2.0 にできる。
+         Unity / .NET Core / .NET 5 以降 / コンソールからも使える。
+         描画（FlowDocument 生成）は MdWpf 側が担当する。 -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Authors>Keiji Mitsubuchi</Authors>
+    <Description>Markdown parser (.Net Standard 2.0)</Description>
+    <Copyright>Keiji Mitsubuchi</Copyright>
+    <Company>Virtual IP Production</Company>
+  </PropertyGroup>
+
+</Project>

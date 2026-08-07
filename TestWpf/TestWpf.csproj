@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>7.3</LangVersion>
+    <RootNamespace>TestWpf</RootNamespace>
+    <AssemblyName>TestWpf</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MdWpf\MdWpf.csproj" />
+    <ProjectReference Include="..\SvgWpf\SvgWpf.csproj" />
+  </ItemGroup>
+
+</Project>

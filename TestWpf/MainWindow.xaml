@@ -1,0 +1,103 @@
+<Window x:Class="TestWpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="clr-namespace:MdWpf;assembly=MdWpf"
+        xmlns:svg="clr-namespace:SvgWpf;assembly=SvgWpf"
+        Title="MdWpf / SvgWpf Test" Height="760" Width="1180"
+        FontFamily="Meiryo, Yu Gothic UI">
+    <TabControl Margin="6">
+
+        <TabItem Header="Markdown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="4" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,6">
+                    <Button x:Name="buttonMdOpen" Content="MD を開く" Width="100" Height="28"
+                            Margin="0,0,6,0" Click="buttonMdOpen_Click" />
+                    <Button x:Name="buttonMdSample" Content="サンプル" Width="90" Height="28"
+                            Margin="0,0,6,0" Click="buttonMdSample_Click" />
+                    <Button x:Name="buttonMdTree" Content="解析木を表示" Width="110" Height="28"
+                            Margin="0,0,6,0" Click="buttonMdTree_Click" />
+                    <TextBlock x:Name="textMdInfo" VerticalAlignment="Center" Foreground="#555" />
+                </StackPanel>
+
+                <TextBox x:Name="textMdInput" Grid.Row="1" Grid.Column="0"
+                         AcceptsReturn="True" AcceptsTab="True"
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                         FontFamily="Consolas, MS Gothic" FontSize="13"
+                         TextWrapping="NoWrap"
+                         TextChanged="textMdInput_TextChanged" />
+
+                <GridSplitter Grid.Row="1" Grid.Column="1" Width="4"
+                              HorizontalAlignment="Stretch" Background="#DDD" />
+
+                <Border Grid.Row="1" Grid.Column="2" BorderBrush="#CCC" BorderThickness="1">
+                    <md:MdViewer x:Name="mdViewer" />
+                </Border>
+            </Grid>
+        </TabItem>
+
+        <TabItem Header="SVG">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="4" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,6">
+                    <Button x:Name="buttonSvgOpen" Content="SVG を開く" Width="100" Height="28"
+                            Margin="0,0,6,0" Click="buttonSvgOpen_Click" />
+                    <Button x:Name="buttonSvgSample" Content="サンプル" Width="90" Height="28"
+                            Margin="0,0,6,0" Click="buttonSvgSample_Click" />
+                    <TextBlock Text="Stretch:" VerticalAlignment="Center" Margin="6,0,4,0" />
+                    <ComboBox x:Name="comboStretch" Width="100" Height="26"
+                              SelectionChanged="comboStretch_SelectionChanged">
+                        <ComboBoxItem Content="Uniform" IsSelected="True" />
+                        <ComboBoxItem Content="UniformToFill" />
+                        <ComboBoxItem Content="Fill" />
+                        <ComboBoxItem Content="None" />
+                    </ComboBox>
+                    <TextBlock x:Name="textSvgInfo" VerticalAlignment="Center"
+                               Margin="10,0,0,0" Foreground="#555" />
+                </StackPanel>
+
+                <TextBox x:Name="textSvgInput" Grid.Row="1" Grid.Column="0"
+                         AcceptsReturn="True" AcceptsTab="True"
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                         FontFamily="Consolas, MS Gothic" FontSize="13"
+                         TextWrapping="NoWrap"
+                         TextChanged="textSvgInput_TextChanged" />
+
+                <GridSplitter Grid.Row="1" Grid.Column="1" Width="4"
+                              HorizontalAlignment="Stretch" Background="#DDD" />
+
+                <Border Grid.Row="1" Grid.Column="2" BorderBrush="#CCC" BorderThickness="1"
+                        Background="White">
+                    <svg:SvgViewer x:Name="svgViewer" Margin="8" />
+                </Border>
+            </Grid>
+        </TabItem>
+
+        <TabItem Header="解析木">
+            <TextBox x:Name="textTree" IsReadOnly="True"
+                     AcceptsReturn="True"
+                     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                     FontFamily="Consolas, MS Gothic" FontSize="12"
+                     TextWrapping="NoWrap" />
+        </TabItem>
+
+    </TabControl>
+</Window>
