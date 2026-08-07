@@ -287,3 +287,15 @@ SharpVectors.Runtime.Wpf.dll
 - `SvgRender.From*()` の戻り値は `Freeze()` 済みなので、別スレッドから UI に渡せます
 - コンソールアプリから使う場合、`Main` に `[STAThread]` が必要です
 - リンクのクリックは既定のブラウザで開きます（`Process.Start`）
+
+---
+
+## ライセンス
+
+[MIT License](LICENSE) — Copyright (c) 2026 Keiji Mitsubuchi
+
+SVG の解析に使っている [SharpVectors](https://github.com/ElinamLLC/SharpVectors) は
+BSD-3-Clause（Copyright (c) 2010 - 2024 Elinam LLC）です。SharpVectors の DLL を同梱して
+再配布する場合は、そちらの著作権表示とライセンス条文も併せて添付してください。
+
+`MdLib` は外部依存がないため、Markdown 解析だけを使う場合は MIT のみで完結します。

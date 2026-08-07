@@ -10,6 +10,7 @@
     <Description>Markdown parser (.Net Standard 2.0)</Description>
     <Copyright>Keiji Mitsubuchi</Copyright>
     <Company>Virtual IP Production</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
 </Project>

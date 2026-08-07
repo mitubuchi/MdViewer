@@ -9,6 +9,7 @@
     <Description>SVG renderer for WPF</Description>
     <Copyright>Keiji Mitsubuchi</Copyright>
     <Company>Virtual IP Production</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
