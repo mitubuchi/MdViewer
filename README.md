@@ -34,6 +34,9 @@ net472 + WPF   ┃ SvgWpf ── SharpVectors
 
 C# は全プロジェクト `LangVersion 7.3`（Unity 対応のため）。
 
+このソリューションは自己完結しています。外部依存は SharpVectors だけで、他の自作
+ライブラリには一切依存していません。`MdViewer.sln` を開けばそのままビルドできます。
+
 ---
 
 ## ビルド
@@ -262,6 +265,107 @@ panel1.Controls.Add(host);
 - 表セル内での改行
 
 CommonMark 完全準拠ではありません。
+
+---
+
+## 設計メモ
+
+なぜこうなっているかの記録です。改造するときの参考にしてください。
+
+### 解析と描画を分離している
+
+**`MdLib` は WPF に一切依存しません**（参照アセンブリは `netstandard` のみ）。
+そのため Unity / .NET 8 / コンソール / ASP.NET Core からも Markdown 解析だけ使えます。
+.NET 8 のコンソールアプリで動作確認済みです。
+
+WPF は .NET Standard 2.0 に含まれないため、描画側（`MdWpf` / `SvgWpf`）は `net472` です。
+`.NET 5` 以降から使いたくなったら、csproj を
+`<TargetFrameworks>net472;net8.0-windows</TargetFrameworks>` にすればコード変更なしで通ります。
+
+**この分離は壊さないでください。** `MdLib` に `System.Windows.*` を持ち込むと、
+Unity やコンソールから使えなくなります。
+
+### MdNode は 1 クラスで全種別を表す
+
+種別ごとにクラスを分けず、`MdType` 列挙 1 本でブロックとインラインを扱っています。
+継承階層を作るより、`MdFlow` 側を単純な `switch` で書けるほうが読みやすいという判断です。
+`MdNode.Dump()` で木をインデント表示できるので、パーサの挙動を追うときに使ってください。
+
+### SVG は SharpVectors に委譲している
+
+SVG は仕様が大きいので自前実装していません。`SvgRender` は薄いラッパで、
+**失敗時に例外を投げず `null` を返します**。呼び出し側で null チェックする方針です。
+
+Markdown 内の `.svg` 画像は `MdFlow.Image()` から `SvgRender.FromUri()` を呼んで描画しています。
+これが `MdWpf` → `SvgWpf` 依存の唯一の理由で、該当箇所は 1 か所だけです。
+SVG を切り離したい場合はここをデリゲート差し替えにしてください。
+
+### Zoom の意味が Markdown と SVG で違う
+
+- `MdViewer.Zoom` — `FlowDocumentScrollViewer.Zoom`（％）。100 で等倍
+- `SvgViewer.Zoom` — 100 のときは `Stretch` に従って**枠に合わせる**。100 以外は原寸 × 倍率で
+  描き、はみ出しは内部 `ScrollViewer` でスクロール
+
+そのため `MdViewerApp` の「標準に戻す」は両方に 100 をセットしますが、Markdown では 100%、
+SVG ではフィット表示になります。ラベルが「100%」ではなく「標準に戻す」なのはこのためです。
+
+---
+
+## 実装メモ — ハマった箇所
+
+同じ罠を踏み直さないための記録です。
+
+### Span.TextDecorations は子の Run に伝わらない
+
+打ち消し線（`~~text~~`）が、解析はできているのに線が描かれませんでした。
+`Span` に `TextDecorations` を設定しても子の `Run` には継承されません。
+`MdFlow.SetStrike()` で `Run` まで再帰的に辿り、個別に設定しています。
+`Bold` / `Italic` / `Hyperlink` はいずれも `Span` 派生なので、同じ再帰で拾えます。
+
+### 水平線は空 Paragraph の罫線では潰れる
+
+`---` を `FontSize=0.1` の空 `Paragraph` に上罫線を引く方式では、行高で潰れて見えませんでした。
+高さ 1 の `Border` を `BlockUIContainer` に載せる方式にしています。
+
+### StatusBar の DockPanel は最後の子が残り幅を占める
+
+`StatusBar.ItemsPanel` に `DockPanel` を使う場合、`Dock="Right"` の項目を
+**残り幅を占める項目より先**に書かないと右側が切れます。
+`MdViewerApp/MainWindow.xaml` では拡大縮小パネルを先、パス表示を後にしています。
+
+### リスト項目内のブロック要素
+
+番号付きリストの途中にコードブロックを挟むと、リストが分断されて番号が振り直される問題が
+ありました。`MdParser.ParseList()` は項目の続き行をまとめて集め、字下げを外してから
+`ParseBlocks` に再帰させる方式にしてあります。
+入れ子リスト・項目内コード・項目内引用がこれで一括して扱えます。
+
+### 強調のフランキング規則
+
+`_ref` や `snake_case_name`、`a * b * c` がコードブロック外に生で出たときに斜体化しないよう、
+CommonMark の簡易フランキング規則を入れています（`CanOpen` / `CanClose`）。
+`_` は語中で無効、開き記号の直後が空白なら無効です。
+**ここを緩めると識別子が壊れます。**
+
+---
+
+## 動作確認のやり方
+
+GUI を目で見ずに検証したい場合は、描画結果を PNG に落とすのが確実です。
+`RenderTargetBitmap` で `MdViewer` / `SvgViewer` をラスタライズする小さな STA コンソール
+アプリを作り、PNG を吐かせて画像として確認します。要点は 3 つです。
+
+- `Main` に `[STAThread]` が必要
+- `Measure` → `Arrange` → `UpdateLayout` の後、**Dispatcher を回さないと FlowDocument の
+  レイアウトが確定しません**（`DispatcherFrame` ＋ `DispatcherPriority.SystemIdle` で pump する）
+- `OutputType` は `Exe`。`WinExe` だとコンソール出力が消えて失敗が見えなくなります
+
+`MdViewerApp` 自体の検証は、リフレクションで `MainWindow` の private フィールド
+（`tabs` / `textStatus` / `textZoom` / `textEmpty`）とメソッド（`OpenFiles` / `CloseTab` /
+`StepZoom` / `SetZoom`）を叩いて行いました。
+
+PowerShell から exe を呼ぶときの注意: **空文字列の引数は落とされて引数がずれます。**
+プレースホルダ（`"-"` など）を渡してください。
 
 ---
 
