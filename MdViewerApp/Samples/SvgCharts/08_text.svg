@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='380' height='220' viewBox='0 0 380 220'>
+<defs><path id='curve' d='M40,140 Q190,60 340,140' fill='none'/></defs>
+<rect width='380' height='220' fill='#fff'/>
+<path d='M40,140 Q190,60 340,140' fill='none' stroke='#ddd'/>
+<text font-size='15' font-family='Meiryo' fill='#4A90D9'>
+  <textPath href='#curve'>曲線に沿ったテキスト</textPath>
+</text>
+<text x='190' y='180' font-size='14' text-anchor='middle' font-family='Meiryo'>
+  <tspan fill='#333'>合計 </tspan><tspan fill='#E0533D' font-weight='bold' font-size='20'>1,248</tspan><tspan fill='#333'> 件</tspan>
+</text>
+<text x='190' y='30' font-size='13' text-anchor='middle' font-family='Consolas' letter-spacing='3' fill='#666'>LETTER SPACING</text>
+</svg>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='380' height='220' viewBox='0 0 380 220'>
+<rect width='380' height='220' fill='#fff'/>
+<rect x='70' y='60' width='45' height='120' fill='#4A90D9'>
+  <animate attributeName='height' from='0' to='120' dur='1s' fill='freeze'/>
+</rect>
+<circle cx='250' cy='110' r='45' fill='#3DB16A'>
+  <animate attributeName='r' values='30;50;30' dur='2s' repeatCount='indefinite'/>
+</circle>
+<text x='190' y='205' font-size='13' text-anchor='middle' font-family='Meiryo'>animate 付きでも静止画で出るか</text>
+</svg>

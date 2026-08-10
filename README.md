@@ -90,6 +90,7 @@ MdViewerApp.exe C:\docs\report.md C:\docs\chart.svg
 ```
 
 `MdViewerApp/Samples/` に SVG を埋め込んだ Markdown のサンプルがあります。
+`Samples/SvgCharts/charts.md` は、グラフ SVG の対応範囲を実例で確かめられるサンプルです。
 
 倍率の段階は 50 / 67 / 80 / 90 / 100 / 110 / 125 / 150 / 175 / 200 / 250 / 300 / 400 ％です。
 
@@ -212,6 +213,34 @@ DrawingGroup g = SvgRender.GroupFromFile(path);  // 図形として加工した�
 ```
 
 **失敗時は例外を投げず `null` を返します。** 呼び出し側で null チェックしてください。
+
+### SVG の対応範囲（グラフを描く場合）
+
+解析は SharpVectors に任せているため、グラフ SVG でよく使われる書き方はひととおり通ります。
+`MdViewerApp/Samples/SvgCharts/` に実例を 10 個入れてあります。`charts.md` を開くと
+Markdown に埋め込んだ状態で全部まとめて見られます。
+
+| 書き方 | 対応 |
+|---|---|
+| `rect` `line` `circle` `path`（円弧 `A` コマンド含む） | 対応 |
+| `text` / `tspan` / `textPath` / `text-anchor` / `letter-spacing` | 対応 |
+| `linearGradient` / `stroke-dasharray` / `clipPath` | 対応 |
+| `defs` / `use` / `symbol` / `marker`（軸の矢印など） | 対応 |
+| 入れ子の `g transform`（`translate` / `rotate` / `scale`） | 対応 |
+| `<style>` の CSS クラス指定 | 対応 |
+| 日本語のラベル・タイトル | 対応 |
+| `filter`（影・ぼかし） | **非対応** |
+| `foreignObject`（HTML 埋め込み） | **非対応** |
+| SMIL `animate` | 静止画として描画（動かない） |
+
+非対応の 2 つはどちらも**部分的な欠落**です。`filter` は効果が消えるだけで図形自体は
+描かれますし、`foreignObject` も枠が残るだけで同じ SVG 内の `text` は描かれます。
+読み込みに失敗するわけではありません。
+
+**Mermaid を使う場合の注意。** Mermaid は既定でノードのラベルを `foreignObject` に入れるため、
+そのままだと図形は出るのに文字だけ消えます。Mermaid 側で `htmlLabels: false` を指定して
+`text` 要素で書き出させてください。matplotlib や Excel、Illustrator の SVG 書き出しは
+`text` を使うので影響ありません。
 
 ---
 

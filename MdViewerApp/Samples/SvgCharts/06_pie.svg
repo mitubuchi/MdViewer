@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='380' height='220' viewBox='0 0 380 220'>
+<rect width='380' height='220' fill='#fff'/>
+<g transform='translate(120,115)'>
+  <path d='M0,0 L0,-85 A85,85 0 0,1 80.8,26.3 Z' fill='#4A90D9'/>
+  <path d='M0,0 L80.8,26.3 A85,85 0 0,1 -30,79.5 Z' fill='#3DB16A'/>
+  <path d='M0,0 L-30,79.5 A85,85 0 0,1 -83,18 Z' fill='#E0533D'/>
+  <path d='M0,0 L-83,18 A85,85 0 0,1 0,-85 Z' fill='#F5C243'/>
+  <circle cx='0' cy='0' r='40' fill='#fff'/>
+</g>
+<g font-size='12' font-family='Meiryo' fill='#333'>
+  <rect x='240' y='60' width='12' height='12' fill='#4A90D9'/><text x='258' y='71'>製品 A  38%</text>
+  <rect x='240' y='85' width='12' height='12' fill='#3DB16A'/><text x='258' y='96'>製品 B  27%</text>
+  <rect x='240' y='110' width='12' height='12' fill='#E0533D'/><text x='258' y='121'>製品 C  21%</text>
+  <rect x='240' y='135' width='12' height='12' fill='#F5C243'/><text x='258' y='146'>その他  14%</text>
+</g>
+</svg>

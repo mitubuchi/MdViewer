@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='380' height='220' viewBox='0 0 380 220'>
+<defs>
+  <filter id='sh' x='-30%' y='-30%' width='170%' height='170%'>
+    <feGaussianBlur in='SourceAlpha' stdDeviation='3'/>
+    <feOffset dx='3' dy='4' result='o'/>
+    <feMerge><feMergeNode in='o'/><feMergeNode in='SourceGraphic'/></feMerge>
+  </filter>
+</defs>
+<rect width='380' height='220' fill='#fff'/>
+<g filter='url(#sh)'>
+  <rect x='70' y='110' width='45' height='70' fill='#4A90D9'/>
+  <rect x='140' y='70' width='45' height='110' fill='#4A90D9'/>
+  <rect x='210' y='45' width='45' height='135' fill='#3DB16A'/>
+</g>
+<text x='190' y='205' font-size='13' text-anchor='middle' font-family='Meiryo'>影がついていれば対応</text>
+</svg>

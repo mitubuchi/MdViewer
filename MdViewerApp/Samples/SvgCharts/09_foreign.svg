@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='380' height='220' viewBox='0 0 380 220'>
+<rect width='380' height='220' fill='#fff'/>
+<rect x='30' y='30' width='320' height='90' fill='#F3F3F3' stroke='#ccc'/>
+<foreignObject x='40' y='40' width='300' height='70'>
+  <div xmlns='http://www.w3.org/1999/xhtml' style='font-family:Meiryo;font-size:14px;color:#333'>
+    これは foreignObject の中の HTML です。表示されなければ非対応。
+  </div>
+</foreignObject>
+<text x='190' y='160' font-size='13' text-anchor='middle' font-family='Meiryo' fill='#333'>この行は普通の text（必ず出る）</text>
+</svg>
