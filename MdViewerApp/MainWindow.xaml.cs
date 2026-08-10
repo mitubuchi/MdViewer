@@ -7,7 +7,9 @@
                 機能はファイルのオープンとクローズ、および拡大縮小のみ。
                 編集はできない（MdViewer / SvgViewer はどちらも読み取り専用）。
 
-    2026.08.10  Add ImgViewer : 画像と動画サムネイルもタブで開けるようにした
+    2026.08.10  Add ImgViewer : 画像と動画サムネイルもタブで開けるようにした。
+                Markdown / 画像 / SVG の閲覧専用ビューアになった。
+                動画はサムネイルの静止画で、再生はできない。
  */
 using System;
 using System.Collections.Generic;
