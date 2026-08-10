@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 画像のデコードは WIC（WPF 標準）、動画のサムネイルは Windows Shell の
+         IShellItemImageFactory を使う。どちらも OS の機能なので外部依存は無い。
+         Shell を叩くため net472（Windows 専用）。 -->
+    <TargetFramework>net472</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>7.3</LangVersion>
+    <Authors>Keiji Mitsubuchi</Authors>
+    <Description>Image and video thumbnail renderer for WPF</Description>
+    <Copyright>Keiji Mitsubuchi</Copyright>
+    <Company>Virtual IP Production</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>

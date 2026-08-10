@@ -152,6 +152,7 @@ namespace MdWpf
                 CodeBlockPadding = s.CodeBlockPadding,
                 QuotePadding = s.QuotePadding,
                 ImageMaxWidth = s.ImageMaxWidth,
+                ImageDecodeScale = s.ImageDecodeScale,
                 BasePath = s.BasePath,
             };
         }

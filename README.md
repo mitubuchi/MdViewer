@@ -1,11 +1,12 @@
 # MdViewer
 
-Markdown と SVG を表示する WPF ライブラリと、閲覧専用ビューアアプリ。
+Markdown と SVG、画像・動画を表示する WPF ライブラリと、閲覧専用ビューアアプリ。
 
 - **Markdown パーサは自前実装・外部依存なし**。`netstandard2.0` なので Unity / .NET 8 /
   コンソールからも使える
 - SVG の解析は [SharpVectors](https://github.com/ElinamLLC/SharpVectors) に委譲
 - Markdown 内に埋め込んだ SVG 画像も描画される
+- **動画は Windows のサムネイル（ポスターフレーム）で表示する。** 外部ツールは不要
 
 Programmer : Keiji Mitsubuchi / Virtual IP Production
 
@@ -18,14 +19,16 @@ Programmer : Keiji Mitsubuchi / Virtual IP Production
 | **MdLib** | `netstandard2.0` | Markdown 解析（`MdNode` / `MdParser`） | なし |
 | **MdWpf** | `net472` + WPF | FlowDocument 生成と `MdViewer` コントロール | なし |
 | **SvgWpf** | `net472` + WPF | `SvgRender` / `SvgViewer` コントロール | SharpVectors 1.8.4 |
+| **ImgWpf** | `net472` + WPF | `ImgRender` / `ImgViewer` コントロール。画像と動画サムネイル | なし（OS の機能） |
 | **MdViewerApp** | `net472` + WPF | 閲覧専用ビューア（タブ・拡大縮小） | — |
 | TestWpf | `net472` + WPF | ライブラリ開発用のテスト台 | — |
 
 ```
-netstandard2.0 ┃ MdLib ──────────────┐
-───────────────╂─────────────────────┼──────
-net472 + WPF   ┃ SvgWpf ── SharpVectors
-               ┃    └──────────── MdWpf
+netstandard2.0 ┃ MdLib ───────────────────┐
+───────────────╂──────────────────────────┼──────
+net472 + WPF   ┃ SvgWpf ── SharpVectors    │
+               ┃    └───────────────── MdWpf
+               ┃ ImgWpf ──────────────────┘
 ```
 
 **解析（MdLib）と描画（MdWpf）を分離しています。** WPF は .NET Standard 2.0 に含まれない
@@ -68,9 +71,19 @@ Visual Studio 2022 で `MdViewer.sln` を開いてビルドしても同じです
 - 複数ファイルを同時に開けます（ダイアログで複数選択、またはまとめてドロップ）
 - 同じファイルを再度開くと、新しいタブを作らず既存のタブに切り替わります
 - 倍率はタブごとに独立しています
-- `.md` / `.markdown` は `MdViewer`、`.svg` は `SvgViewer` で表示します
 - Markdown 内の画像は相対パスで解決されます
 - コマンドライン引数でファイルを渡すと起動時に開きます
+
+拡張子で表示するコントロールを決めます。
+
+| 拡張子 | コントロール |
+|---|---|
+| `.md` `.markdown`、および下記以外 | `MdViewer` |
+| `.svg` | `SvgViewer` |
+| `.png` `.jpg` `.gif` `.bmp` `.tif` `.ico` `.webp` `.heic` など | `ImgViewer` |
+| `.mp4` `.mov` `.avi` `.wmv` `.mkv` `.webm` `.mpg` など | `ImgViewer`（サムネイル） |
+
+動画はサムネイル（ポスターフレーム）の静止画を表示します。**再生はできません。**
 
 ```bash
 MdViewerApp.exe C:\docs\report.md C:\docs\chart.svg
@@ -202,6 +215,79 @@ DrawingGroup g = SvgRender.GroupFromFile(path);  // 図形として加工した�
 
 ---
 
+## ImgWpf — 画像と動画サムネイル
+
+外部依存はありません。画像のデコードは WPF 標準の WIC、動画のサムネイルは
+Windows Shell の `IShellItemImageFactory` を使います。どちらも OS の機能なので、
+ffmpeg のような外部ツールを抱える必要がありません。
+
+### コントロールとして貼る
+
+```xml
+<Window xmlns:img="clr-namespace:ImgWpf;assembly=ImgWpf">
+    <img:ImgViewer Source="C:\data\photo.jpg" />
+</Window>
+```
+
+```csharp
+imgViewer.Source = @"C:\data\clip.mp4";   // 動画ならサムネイルを表示する
+imgViewer.Zoom   = 200;                   // 表示倍率（％）
+bool ok    = imgViewer.IsImageLoaded;
+bool thumb = imgViewer.IsThumbnail;       // サムネイルで代替表示しているか
+Size px    = imgViewer.PixelSize;         // 表示している画像の画素サイズ
+```
+
+`Zoom` の意味は `SvgViewer` と同じです。100 のときは `Stretch` に従って枠に合わせ、
+100 以外のときは原寸 × 倍率で描いて、はみ出た分は内部の `ScrollViewer` でスクロールします。
+
+### BitmapSource に変換する
+
+```csharp
+using ImgWpf;
+
+// 中身に応じて自動で振り分ける（画像はデコード、動画はサムネイル）
+image.Source = ImgRender.From(@"C:\data\photo.jpg", 600);
+image.Source = ImgRender.From(@"C:\data\clip.mp4");
+
+// 明示的に指定する
+image.Source = ImgRender.FromFile(@"C:\data\photo.jpg", 600);   // 600 px へ縮小してデコード
+image.Source = ImgRender.FromStream(stream);
+image.Source = ImgRender.FromUri(new Uri("https://example.com/a.png"));
+image.Source = ImgRender.ThumbnailFromFile(@"C:\data\clip.mp4", 512);
+
+int w = ImgRender.PixelWidthOf(path);        // ヘッダだけ読んで原寸の横幅を得る
+bool v = ImgRender.IsVideoFile(path);
+bool s = ImgRender.IsSupported(path);        // ImgWpf が表示を試みる拡張子か
+```
+
+**`SvgRender` と同じく、失敗時は例外を投げず `null` を返します。**
+
+### デコード時に縮小する
+
+`FromFile` / `From` の第 2 引数に幅を渡すと、**デコードの時点で**その幅まで縮小します
+（`DecodePixelWidth`）。読み込んでから縮小するのではないので、大きな写真でメモリと時間を
+節約できます。原寸より大きい値を渡しても拡大はしません。
+
+```csharp
+// 6000 x 4000 の写真を 600 px 相当で読む。全画素は展開されない
+image.Source = ImgRender.FromFile(photo, 600);
+```
+
+`FromUri` は原寸が分からないため縮小指定を受け付けません。表示側の `MaxWidth` で
+合わせてください。
+
+### サムネイルについて
+
+- エクスプローラと同じサムネイルが返り、OS のサムネイルキャッシュに乗ります。
+  実測で初回 49 ms、2 回目 10 ms 程度でした（mp4、512 px）
+- **COM を使うので STA スレッドから呼んでください**（WPF の UI スレッドは STA）
+- サムネイルを持たないファイルは `null` を返します。第 3 引数に `true` を渡すと
+  種類アイコン（白紙アイコンなど）で代替します。既定は `false` です
+- 取得できるかは OS のサムネイルハンドラ次第です。`.mp4` `.wmv` `.avi` は標準で取れます。
+  `.mkv` などは対応する拡張機能が必要な場合があります
+
+---
+
 ## WinForms から使う
 
 `ElementHost` を挟めば WinForms からも使えます。
@@ -249,12 +335,18 @@ panel1.Controls.Add(host);
 | 打ち消し線 | `~~text~~` |
 | リンク | `[text](url)` |
 | 自動リンク | `<https://...>`、裸の `https://...` |
-| 画像 | `![alt](url)`（`.svg` も表示可。読めない場合は alt テキストで代替） |
+| 画像 | `![alt](url)` |
+| 動画 | `![alt](clip.mp4)` — サムネイルを表示する |
 | 改行 | 行末に半角スペース 2 個 |
 | エスケープ | `` \* \_ \` \[ \] \( \) \# \\ \| \! \> \< \~ `` |
 
 強調は CommonMark の簡易フランキング規則に従います。`snake_case_name` や `a * b * c` が
 斜体にならないよう、`_` は語中で無効、開き記号の直後が空白の場合も無効です。
+
+画像の記法は 1 つですが、拡張子で描き方が変わります。`.svg` は SvgWpf、それ以外の
+ローカル画像と動画は ImgWpf が担当します。`http://` などは `Uri` のまま読み込みます。
+**読めない画像・動画は alt テキストで代替します**（`[alt]` と表示）。
+大きな画像は `MdStyle.ImageMaxWidth` × `ImageDecodeScale` の幅でデコードされます。
 
 ### 対応していない記法
 
@@ -300,14 +392,28 @@ Markdown 内の `.svg` 画像は `MdFlow.Image()` から `SvgRender.FromUri()` �
 これが `MdWpf` → `SvgWpf` 依存の唯一の理由で、該当箇所は 1 か所だけです。
 SVG を切り離したい場合はここをデリゲート差し替えにしてください。
 
-### Zoom の意味が Markdown と SVG で違う
+### 動画サムネイルは Windows Shell に委譲している
+
+動画のフレームを自前でデコードすると、コーデックの塊（ffmpeg など）を抱えることになります。
+`ImgRender` は Windows Shell の `IShellItemImageFactory::GetImage` を呼び、
+**エクスプローラが表示しているのと同じサムネイル**をもらう方式にしました。
+
+- 追加の DLL が 1 つも増えない（SharpVectors だけという方針を崩さない）
+- OS のサムネイルキャッシュに乗るので 2 回目以降が速い
+- 動画に限らず、サムネイルハンドラがある形式（PDF、Office 文書など）も同じ経路で出る
+
+`MediaPlayer` ＋ `RenderTargetBitmap` でフレームを抜く手もありますが、`MediaOpened` 待ちの
+非同期処理になり、同期的な `MdFlow.ToFlowDocument()` と噛み合わないため採っていません。
+
+### Zoom の意味が Markdown と画像・SVG で違う
 
 - `MdViewer.Zoom` — `FlowDocumentScrollViewer.Zoom`（％）。100 で等倍
-- `SvgViewer.Zoom` — 100 のときは `Stretch` に従って**枠に合わせる**。100 以外は原寸 × 倍率で
-  描き、はみ出しは内部 `ScrollViewer` でスクロール
+- `SvgViewer.Zoom` / `ImgViewer.Zoom` — 100 のときは `Stretch` に従って**枠に合わせる**。
+  100 以外は原寸 × 倍率で描き、はみ出しは内部 `ScrollViewer` でスクロール
 
-そのため `MdViewerApp` の「標準に戻す」は両方に 100 をセットしますが、Markdown では 100%、
-SVG ではフィット表示になります。ラベルが「100%」ではなく「標準に戻す」なのはこのためです。
+そのため `MdViewerApp` の「標準に戻す」は 100 をセットしますが、Markdown では 100%、
+SVG と画像ではフィット表示になります。ラベルが「100%」ではなく「標準に戻す」なのは
+このためです。
 
 ---
 
@@ -347,6 +453,33 @@ CommonMark の簡易フランキング規則を入れています（`CanOpen` / 
 `_` は語中で無効、開き記号の直後が空白なら無効です。
 **ここを緩めると識別子が壊れます。**
 
+### ScrollViewer の中では Stretch が効かない
+
+`SvgViewer` / `ImgViewer` は拡大時のスクロールのために `Image` を `ScrollViewer` に入れて
+いますが、**`ScrollViewer` は中身を無限の大きさで測る**ため、`Stretch="Uniform"` を指定しても
+枠に合わせてくれず原寸のまま描かれてしまいます（2000 px の画像が 700 px の枠からはみ出す）。
+
+枠に合わせるときは `ScrollBarVisibility.Disabled` にしてスクロールを切ります。こうすると
+`ScrollViewer` が枠の大きさを中身に伝えるので `Stretch` が効きます。100 % 以外のときだけ
+`Auto` に戻します。`Stretch.None` は「原寸で見る」指定なので、100 % でも枠には合わせません。
+
+### HBITMAP からの変換で α が落ちる
+
+Shell から返る HBITMAP を `Imaging.CreateBitmapSourceFromHBitmap()` で変換すると
+**α が落ちて透明部分が黒くなります**。`GetDIBits` で自分で読み、32bpp なら `Pbgra32`
+（Shell が返すのは乗算済み α）として `BitmapSource` を作っています。
+
+24bpp 以下のときに `Pbgra32` にしてはいけません。`GetDIBits` が α のバイトに 0 を書くため、
+**画像全体が完全に透明になって何も見えなくなります**。この場合は α を見ない `Bgr32` を使います。
+
+### サムネイルの「アイコン代替」は既定で切る
+
+`IShellItemImageFactory::GetImage` は既定で、サムネイルが無いファイルに種類アイコンを返します。
+これを有効にしたままだと、**壊れた画像が「白紙アイコン」として表示されて失敗に気づけません**。
+Markdown 中の壊れた画像が巨大な白紙アイコンになる不具合が実際に出たため、
+`SIIGBF_THUMBNAILONLY` を既定にして `null` を返し、alt テキストへ落とすようにしています。
+アイコンが欲しい用途では `ThumbnailFromFile(path, size, allowIcon: true)` を使います。
+
 ---
 
 ## 動作確認のやり方
@@ -371,14 +504,16 @@ PowerShell から exe を呼ぶときの注意: **空文字列の引数は落と
 
 ## 配布時に必要な DLL
 
-自作 3 つ（約 45 KB）と SharpVectors 6 つ（約 1.8 MB）の計 9 個です。
+自作 4 つと SharpVectors 6 つ（約 1.8 MB）の計 10 個です。
 
 ```
-MdLib.dll  MdWpf.dll  SvgWpf.dll
+MdLib.dll  MdWpf.dll  SvgWpf.dll  ImgWpf.dll
 SharpVectors.Model.dll  SharpVectors.Rendering.Wpf.dll  SharpVectors.Converters.Wpf.dll
 SharpVectors.Core.dll   SharpVectors.Css.dll            SharpVectors.Dom.dll
 SharpVectors.Runtime.Wpf.dll
 ```
+
+`ImgWpf.dll` は OS の機能だけを使うので、これに付随する DLL はありません。
 
 `SharpVectors.Rendering.Gdi.dll` は NuGet が同梱しますが参照チェーンのどこからも使われていないため、
 配布時は除外できます（削除した構成で動作確認済み）。
@@ -388,8 +523,14 @@ SharpVectors.Runtime.Wpf.dll
 ## 既知の注意点
 
 - `MdFlow.ToFlowDocument()` は WPF の Dispatcher が必要です。UI スレッドから呼んでください
-- `SvgRender.From*()` の戻り値は `Freeze()` 済みなので、別スレッドから UI に渡せます
-- コンソールアプリから使う場合、`Main` に `[STAThread]` が必要です
+- `SvgRender.From*()` / `ImgRender.*` の戻り値は `Freeze()` 済みなので、別スレッドから
+  UI に渡せます
+- コンソールアプリから使う場合、`Main` に `[STAThread]` が必要です。
+  `ImgRender.ThumbnailFromFile()` は COM を使うため、これは必須です
+- サムネイルの初回生成は動画で数百 ms かかることがあります。動画を多く貼った Markdown を
+  同期的に描くと、その分 UI が止まります（キャッシュ機構は持たせていません。OS 側の
+  サムネイルキャッシュに任せています）
+- 動画は静止画のサムネイルです。**再生機能はありません**
 - リンクのクリックは既定のブラウザで開きます（`Process.Start`）
 
 ---

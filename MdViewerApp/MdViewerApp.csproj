@@ -8,7 +8,7 @@
     <RootNamespace>MdViewerApp</RootNamespace>
     <AssemblyName>MdViewerApp</AssemblyName>
     <Authors>Keiji Mitsubuchi</Authors>
-    <Description>Markdown / SVG viewer (read only)</Description>
+    <Description>Markdown / SVG / image viewer (read only)</Description>
     <Copyright>Keiji Mitsubuchi</Copyright>
     <Company>Virtual IP Production</Company>
   </PropertyGroup>
@@ -17,6 +17,7 @@
     <ProjectReference Include="..\MdLib\MdLib.csproj" />
     <ProjectReference Include="..\MdWpf\MdWpf.csproj" />
     <ProjectReference Include="..\SvgWpf\SvgWpf.csproj" />
+    <ProjectReference Include="..\ImgWpf\ImgWpf.csproj" />
   </ItemGroup>
 
 </Project>

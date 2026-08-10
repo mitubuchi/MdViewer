@@ -16,8 +16,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using ImgWpf;
 using MdLib;
 using SvgWpf;
 
@@ -377,19 +377,16 @@ namespace MdWpf
 
             try
             {
-                // SVG は SharpVectors 経由、それ以外は BitmapImage
+                // SVG は SvgWpf、ローカルの画像・動画は ImgWpf、
+                // それ以外（http:// や pack://）は Uri のまま ImgWpf に渡す
                 ImageSource src;
                 if (n.Url.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
                     src = SvgRender.FromUri(uri);
+                else if (uri.IsFile)
+                    src = ImgRender.From(uri.LocalPath, DecodeWidthOf(st));
                 else
-                {
-                    var bmp = new BitmapImage();
-                    bmp.BeginInit();
-                    bmp.UriSource = uri;
-                    bmp.CacheOption = BitmapCacheOption.OnLoad;
-                    bmp.EndInit();
-                    src = bmp;
-                }
+                    src = ImgRender.FromUri(uri);
+
                 if (src == null) return new Run("[" + n.Text + "]");
 
                 var image = new System.Windows.Controls.Image
@@ -412,6 +409,16 @@ namespace MdWpf
                 // 読めない画像は alt テキストで代替する
                 return new Run("[" + n.Text + "]");
             }
+        }
+
+        /// <summary>
+        /// デコード時に縮小する目標幅（px）。0 なら原寸でデコードする。
+        /// 表示幅より大きめに取って、拡大表示に耐えるようにしている。
+        /// </summary>
+        private static int DecodeWidthOf(MdStyle st)
+        {
+            if (st.ImageMaxWidth <= 0 || st.ImageDecodeScale <= 0) return 0;
+            return (int)(st.ImageMaxWidth * st.ImageDecodeScale);
         }
 
         /// <summary>相対パスは BasePath 基準で絶対 URI にする。解決できなければ null</summary>

@@ -6,6 +6,8 @@
                 Markdown / SVG の閲覧専用ビューア。
                 機能はファイルのオープンとクローズ、および拡大縮小のみ。
                 編集はできない（MdViewer / SvgViewer はどちらも読み取り専用）。
+
+    2026.08.10  Add ImgViewer : 画像と動画サムネイルもタブで開けるようにした
  */
 using System;
 using System.Collections.Generic;
@@ -15,6 +17,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
+using ImgWpf;
 using MdLib;
 using MdWpf;
 using SvgWpf;
@@ -27,10 +30,15 @@ namespace MdViewerApp
         static readonly double[] ZoomSteps =
             { 50, 67, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400 };
 
+        const string ImageSpec = "*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.tif;*.tiff;*.ico;*.webp;*.heic";
+        const string VideoSpec = "*.mp4;*.m4v;*.mov;*.avi;*.wmv;*.mkv;*.webm;*.mpg;*.mpeg";
+
         const string Filter =
-            "Markdown / SVG (*.md;*.markdown;*.svg)|*.md;*.markdown;*.svg" +
+            "表示できるファイル|*.md;*.markdown;*.svg;" + ImageSpec + ";" + VideoSpec +
             "|Markdown (*.md;*.markdown)|*.md;*.markdown" +
             "|SVG (*.svg)|*.svg" +
+            "|画像 (" + ImageSpec + ")|" + ImageSpec +
+            "|動画 (" + VideoSpec + ")|" + VideoSpec +
             "|すべてのファイル (*.*)|*.*";
 
         public MainWindow()
@@ -82,6 +90,22 @@ namespace MdViewerApp
                         return;
                     }
                     view = sv;
+                }
+                else if (ImgRender.IsSupported(path))
+                {
+                    var iv = new ImgViewer { Background = Brushes.White };
+                    iv.Source = path;
+                    if (!iv.IsImageLoaded)
+                    {
+                        // 動画はサムネイルハンドラが無いと絵が取れない
+                        string why = ImgRender.IsVideoFile(path)
+                            ? "サムネイルを取得できませんでした。\r\nこの形式に対応するコーデックが入っていない可能性があります。\r\n"
+                            : "画像として読み込めませんでした。\r\n";
+                        MessageBox.Show(this, why + path,
+                            "読み込み失敗", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    view = iv;
                 }
                 else
                 {
@@ -225,6 +249,8 @@ namespace MdViewerApp
             if (mv != null) return mv.Zoom;
             var sv = tab.Content as SvgViewer;
             if (sv != null) return sv.Zoom;
+            var iv = tab.Content as ImgViewer;
+            if (iv != null) return iv.Zoom;
             return double.NaN;
         }
 
@@ -237,6 +263,8 @@ namespace MdViewerApp
             if (mv != null) mv.Zoom = z;
             var sv = tab.Content as SvgViewer;
             if (sv != null) sv.Zoom = z;
+            var iv = tab.Content as ImgViewer;
+            if (iv != null) iv.Zoom = z;
 
             UpdateStatus();
         }
@@ -301,6 +329,12 @@ namespace MdViewerApp
             if (sv != null)
                 info += string.Format("    （{0:0.##} x {1:0.##}）",
                     sv.SvgBounds.Width, sv.SvgBounds.Height);
+
+            var iv = tab.Content as ImgViewer;
+            if (iv != null)
+                info += string.Format("    （{0:0} x {1:0} px{2}）",
+                    iv.PixelSize.Width, iv.PixelSize.Height,
+                    iv.IsThumbnail ? " サムネイル" : "");
 
             textStatus.Text = string.Format("[{0}/{1}]  {2}", tabs.SelectedIndex + 1, n, info);
 

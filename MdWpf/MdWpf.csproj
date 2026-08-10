@@ -13,9 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 解析は MdLib、Markdown 内の .svg 画像の描画は SvgWpf に任せる -->
+    <!-- 解析は MdLib、Markdown 内の .svg 画像は SvgWpf、
+         それ以外の画像と動画サムネイルは ImgWpf に任せる -->
     <ProjectReference Include="..\MdLib\MdLib.csproj" />
     <ProjectReference Include="..\SvgWpf\SvgWpf.csproj" />
+    <ProjectReference Include="..\ImgWpf\ImgWpf.csproj" />
   </ItemGroup>
 
 </Project>

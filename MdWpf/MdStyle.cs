@@ -38,6 +38,13 @@ namespace MdWpf
         /// <summary>画像の最大表示幅。0 以下なら原寸</summary>
         public double ImageMaxWidth = 600.0;
 
+        /// <summary>
+        /// ローカル画像をデコードする際の倍率。ImageMaxWidth × この値でデコードする。
+        /// 1 より大きくしておくと拡大表示しても粗くなりにくい。0 以下なら原寸でデコードする。
+        /// 巨大な写真を全画素展開しないための指定なので、原寸より大きくは決してならない。
+        /// </summary>
+        public double ImageDecodeScale = 2.0;
+
         /// <summary>相対パスの画像・リンクを解決する基準ディレクトリ</summary>
         public string BasePath = "";
 
