@@ -98,15 +98,27 @@ namespace SvgWpf
             double z = Zoom;
             if (z <= 0) z = 100.0;
 
-            if (Math.Abs(z - 100.0) < 0.01)
+            // Stretch.None は「原寸で見る」指定なので、100% でも枠には合わせない
+            bool fit = Math.Abs(z - 100.0) < 0.01 && Stretch != Stretch.None;
+
+            if (fit)
             {
+                // ScrollViewer は中身を無限の大きさで測るため、スクロールを
+                // 有効にしたままだと Stretch が効かず原寸のままになる。
+                // 枠に合わせるときはスクロールを切って枠の大きさを伝える
+                _scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                _scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
                 _image.LayoutTransform = null;
                 _image.Stretch = Stretch;
             }
             else
             {
+                _scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+                _scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
                 _image.Stretch = Stretch.None;
-                _image.LayoutTransform = new ScaleTransform(z / 100.0, z / 100.0);
+                _image.LayoutTransform = Math.Abs(z - 100.0) < 0.01
+                    ? null
+                    : new ScaleTransform(z / 100.0, z / 100.0);
             }
         }
 
@@ -148,6 +160,7 @@ namespace SvgWpf
             IsSvgLoaded = src != null;
             SvgBounds = src == null ? Rect.Empty : new Rect(0, 0, src.Width, src.Height);
             ToolTip = tip;
+            ApplyZoom();   // 読み込み時点でも枠合わせ／スクロールの状態を確定させる
         }
     }
 }
