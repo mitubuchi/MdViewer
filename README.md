@@ -17,17 +17,17 @@ Programmer : Keiji Mitsubuchi / Virtual IP Production
 | プロジェクト | ターゲット | 内容 | 外部依存 |
 |---|---|---|---|
 | **MdLib** | `netstandard2.0` | Markdown 解析（`MdNode` / `MdParser`） | なし |
-| **MdWpf** | `net472` + WPF | FlowDocument 生成と `MdViewer` コントロール | なし |
-| **SvgWpf** | `net472` + WPF | `SvgRender` / `SvgViewer` コントロール | SharpVectors 1.8.4 |
-| **ImgWpf** | `net472` + WPF | `ImgRender` / `ImgViewer` コントロール。画像と動画サムネイル | なし（OS の機能） |
+| **MdWpf** | `net472` / `net9.0-windows` | FlowDocument 生成と `MdViewer` コントロール | なし |
+| **SvgWpf** | `net472` / `net9.0-windows` | `SvgRender` / `SvgViewer` コントロール | SharpVectors 1.8.4 |
+| **ImgWpf** | `net472` / `net9.0-windows` | `ImgRender` / `ImgViewer` コントロール。画像と動画サムネイル | なし（OS の機能） |
 | **MdViewerApp** | `net472` + WPF | 閲覧専用ビューア（タブ・拡大縮小） | — |
 | TestWpf | `net472` + WPF | ライブラリ開発用のテスト台 | — |
 
 ```
 netstandard2.0 ┃ MdLib ───────────────────┐
 ───────────────╂──────────────────────────┼──────
-net472 + WPF   ┃ SvgWpf ── SharpVectors    │
-               ┃    └───────────────── MdWpf
+net472 および  ┃ SvgWpf ── SharpVectors    │
+net9.0-windows ┃    └───────────────── MdWpf
                ┃ ImgWpf ──────────────────┘
 ```
 
@@ -399,9 +399,11 @@ CommonMark 完全準拠ではありません。
 そのため Unity / .NET 8 / コンソール / ASP.NET Core からも Markdown 解析だけ使えます。
 .NET 8 のコンソールアプリで動作確認済みです。
 
-WPF は .NET Standard 2.0 に含まれないため、描画側（`MdWpf` / `SvgWpf`）は `net472` です。
-`.NET 5` 以降から使いたくなったら、csproj を
-`<TargetFrameworks>net472;net8.0-windows</TargetFrameworks>` にすればコード変更なしで通ります。
+WPF は .NET Standard 2.0 に含まれないため、描画側（`MdWpf` / `SvgWpf` / `ImgWpf`）は
+Windows デスクトップ専用です。**`net472` と `net9.0-windows` の両方に出しています**
+（ソースは共通、コード変更なし）。`net472` は Unity や既存の .NET Framework アプリ向け、
+`net9.0-windows` は .NET 5 以降のアプリ向けです。SharpVectors は `net8.0-windows7.0` の
+アセンブリが使われます。
 
 **この分離は壊さないでください。** `MdLib` に `System.Windows.*` を持ち込むと、
 Unity やコンソールから使えなくなります。

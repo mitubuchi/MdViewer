@@ -3,8 +3,8 @@
   <PropertyGroup>
     <!-- 画像のデコードは WIC（WPF 標準）、動画のサムネイルは Windows Shell の
          IShellItemImageFactory を使う。どちらも OS の機能なので外部依存は無い。
-         Shell を叩くため net472（Windows 専用）。 -->
-    <TargetFramework>net472</TargetFramework>
+         Shell を叩くため Windows 専用。net472 と net9.0-windows の両方に出す。 -->
+    <TargetFrameworks>net472;net9.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
     <LangVersion>7.3</LangVersion>
     <Authors>Keiji Mitsubuchi</Authors>

@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- WPF は .NET Standard 2.0 に含まれないため net472 -->
-    <TargetFramework>net472</TargetFramework>
+    <!-- WPF は .NET Standard 2.0 に含まれないため、描画側はここで Windows 専用になる。
+         net472 は Unity や既存の .NET Framework アプリ向け、net9.0-windows は
+         .NET 5 以降のアプリ（MindMap のパッケージなど）向け。ソースは共通。 -->
+    <TargetFrameworks>net472;net9.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
     <LangVersion>7.3</LangVersion>
     <Authors>Keiji Mitsubuchi</Authors>
