@@ -140,13 +140,16 @@ namespace ImgWpf
                 bmp.CacheOption = BitmapCacheOption.OnLoad;
                 bmp.EndInit();
                 if (bmp.CanFreeze) bmp.Freeze();
-                return bmp;
+                return Orient(bmp, OrientationOf(uri));
             }
             catch { return null; }
         }
 
         private static BitmapSource Decode(Stream s, int decodeWidth)
         {
+            // 向きはデコードの前に読む（デコード後の BitmapImage からは取り出せない）
+            int orientation = OrientationOf(s);
+
             var bmp = new BitmapImage();
             bmp.BeginInit();
             bmp.StreamSource = s;
@@ -155,7 +158,132 @@ namespace ImgWpf
             if (decodeWidth > 0) bmp.DecodePixelWidth = decodeWidth;
             bmp.EndInit();
             if (bmp.CanFreeze) bmp.Freeze();
-            return bmp;
+            return Orient(bmp, orientation);
+        }
+
+        // ===== EXIF の向き =====
+
+        /// <summary>
+        /// EXIF の Orientation を絵そのものに当てる。
+        ///
+        /// WIC のデコーダはこの欄を読むだけで、回転は当てない。携帯で撮った縦写真は
+        /// 横向きのまま記録され「あとで 90 度回して見せる」ことになっているので、
+        /// そのまま表示すると倒れて見える。エクスプローラーや OS のサムネイルは
+        /// 当てて見せるため、当てないと同じファイルが場所によって違う向きで出る。
+        ///
+        /// 回転と反転だけなので TransformedBitmap で扱える（画素は詰め替えられる）。
+        /// </summary>
+        private static BitmapSource Orient(BitmapSource src, int orientation)
+        {
+            if (src == null) return src;
+
+            Transform transform = TransformFor(orientation);
+            if (transform == null) return src;
+
+            var rotated = new TransformedBitmap(src, transform);
+            if (rotated.CanFreeze) rotated.Freeze();
+            return rotated;
+        }
+
+        /// <summary>Uri から EXIF の Orientation を読む。読めなければ 0。</summary>
+        private static int OrientationOf(Uri uri)
+        {
+            try
+            {
+                var dec = BitmapDecoder.Create(uri,
+                    BitmapCreateOptions.DelayCreation | BitmapCreateOptions.IgnoreColorProfile,
+                    BitmapCacheOption.None);
+
+                return dec.Frames.Count == 0 ? 0 : OrientationOf(dec.Frames[0]);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// ストリームから EXIF の Orientation（1〜8）を読む。無い・読めないときは 0。
+        ///
+        /// デコードのあとでは取り出せない（BitmapImage.Metadata は例外を投げる）ので、
+        /// 画素を読まないデコーダを 1 つ作って先に見ておく。読んだあとは位置を戻すので、
+        /// 呼び出し側はそのままデコードを続けられる。
+        /// </summary>
+        private static int OrientationOf(Stream s)
+        {
+            if (s == null || !s.CanSeek) return 0;
+
+            long pos = s.Position;
+            try
+            {
+                var dec = BitmapDecoder.Create(s,
+                    BitmapCreateOptions.DelayCreation | BitmapCreateOptions.IgnoreColorProfile,
+                    BitmapCacheOption.None);
+                if (dec.Frames.Count == 0) return 0;
+
+                return OrientationOf(dec.Frames[0]);
+            }
+            catch
+            {
+                return 0;
+            }
+            finally
+            {
+                s.Position = pos;
+            }
+        }
+
+        /// <summary>
+        /// フレームの EXIF から Orientation を取り出す。
+        /// JPEG は app1、TIFF は先頭の ifd に入っている。
+        /// </summary>
+        private static int OrientationOf(BitmapSource frame)
+        {
+            try
+            {
+                var meta = frame.Metadata as BitmapMetadata;
+                if (meta == null) return 0;
+
+                object value = meta.GetQuery("/app1/ifd/{ushort=274}");
+                if (value == null) value = meta.GetQuery("/ifd/{ushort=274}");
+                if (value == null) return 0;
+
+                return Convert.ToInt32(value);
+            }
+            catch
+            {
+                // 欄を持たない形式では問い合わせ自体が失敗する。向き無しとして扱う。
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Orientation の値に対する変換。1（そのまま）と範囲外は null を返し、
+        /// 呼び出し側で元の絵をそのまま使う。
+        ///
+        /// 5 と 7 は鏡像を含む。先に左右を反転してから回す順で組む。
+        /// </summary>
+        private static Transform TransformFor(int orientation)
+        {
+            switch (orientation)
+            {
+                case 2: return new ScaleTransform(-1, 1);
+                case 3: return new RotateTransform(180);
+                case 4: return new ScaleTransform(1, -1);
+                case 5: return Mirrored(90);
+                case 6: return new RotateTransform(90);
+                case 7: return Mirrored(270);
+                case 8: return new RotateTransform(270);
+                default: return null;
+            }
+        }
+
+        private static Transform Mirrored(double angle)
+        {
+            var group = new TransformGroup();
+            group.Children.Add(new ScaleTransform(-1, 1));
+            group.Children.Add(new RotateTransform(angle));
+            return group;
         }
 
         /// <summary>画像の原寸の横幅（px）。ヘッダだけ読む。取れなければ 0</summary>
