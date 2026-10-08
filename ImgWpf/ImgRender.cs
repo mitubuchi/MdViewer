@@ -262,6 +262,9 @@ namespace ImgWpf
         /// 呼び出し側で元の絵をそのまま使う。
         ///
         /// 5 と 7 は鏡像を含む。先に左右を反転してから回す順で組む。
+        /// 5 は transpose（左上の画素は左上のまま、行と列が入れ替わる）で「反転して 270 度」、
+        /// 7 は transverse（対角が入れ替わる）で「反転して 90 度」。
+        /// 以前は 5 と 7 を取り違えていた（8 通りの向きを実測して見つけた。Avalonia 版と同じ結果になる）。
         /// </summary>
         private static Transform TransformFor(int orientation)
         {
@@ -270,9 +273,9 @@ namespace ImgWpf
                 case 2: return new ScaleTransform(-1, 1);
                 case 3: return new RotateTransform(180);
                 case 4: return new ScaleTransform(1, -1);
-                case 5: return Mirrored(90);
+                case 5: return Mirrored(270);
                 case 6: return new RotateTransform(90);
-                case 7: return Mirrored(270);
+                case 7: return Mirrored(90);
                 case 8: return new RotateTransform(270);
                 default: return null;
             }
