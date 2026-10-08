@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Avalonia は .NET Standard 2.0 に出せるので、MdLib と同じ土台に揃える。
+         Windows / macOS / Linux で同じ DLL が動く（動画のサムネイルだけは Windows 限定）。 -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Authors>Keiji Mitsubuchi</Authors>
+    <Description>Image viewer for Avalonia</Description>
+    <Copyright>Keiji Mitsubuchi</Copyright>
+    <Company>Virtual IP Production</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- デコードと EXIF の向きは SkiaSharp（Avalonia の描画系と同じもの）に任せる。
+         版は SvgAvalonia が使う Svg.Skia に合わせる -->
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
+  </ItemGroup>
+
+</Project>

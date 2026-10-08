@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- ライブラリの確認台（TestWpf の Avalonia 版）。Windows / macOS / Linux で動く -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <RootNamespace>TestAvalonia</RootNamespace>
+    <AssemblyName>TestAvalonia</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <ProjectReference Include="..\MdAvalonia\MdAvalonia.csproj" />
+    <ProjectReference Include="..\SvgAvalonia\SvgAvalonia.csproj" />
+    <ProjectReference Include="..\ImgAvalonia\ImgAvalonia.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,12 +1,14 @@
 # MdViewer
 
-Markdown と SVG、画像・動画を表示する WPF ライブラリと、閲覧専用ビューアアプリ。
+Markdown と SVG、画像・動画を表示する WPF / Avalonia ライブラリと、閲覧専用ビューアアプリ。
 
 - **Markdown パーサは自前実装・外部依存なし**。`netstandard2.0` なので Unity / .NET 8 /
   コンソールからも使える
 - SVG の解析は [SharpVectors](https://github.com/ElinamLLC/SharpVectors) に委譲
 - Markdown 内に埋め込んだ SVG 画像も描画される
 - **動画は Windows のサムネイル（ポスターフレーム）で表示する。** 外部ツールは不要
+- **Avalonia 版もある**（`MdAvalonia` / `SvgAvalonia` / `ImgAvalonia`）。Windows / macOS / Linux で動く。
+  解析は WPF 版と同じ `MdLib` を使う
 
 Programmer : Keiji Mitsubuchi / Virtual IP Production
 
@@ -22,13 +24,21 @@ Programmer : Keiji Mitsubuchi / Virtual IP Production
 | **ImgWpf** | `net472` / `net9.0-windows` | `ImgRender` / `ImgViewer` コントロール。画像と動画サムネイル | なし（OS の機能） |
 | **MdViewerApp** | `net472` + WPF | 閲覧専用ビューア（タブ・拡大縮小） | — |
 | TestWpf | `net472` + WPF | ライブラリ開発用のテスト台 | — |
+| **MdAvalonia** | `netstandard2.0` | Avalonia 版の描画と `MdViewer` コントロール | Avalonia 11.3 |
+| **SvgAvalonia** | `netstandard2.0` | Avalonia 版の `SvgRender` / `SvgViewer` | Avalonia.Svg.Skia 11.3.0 |
+| **ImgAvalonia** | `netstandard2.0` | Avalonia 版の `ImgRender` / `ImgViewer` | SkiaSharp 3.116.1 |
+| TestAvalonia | `net9.0` + Avalonia | Avalonia 版のテスト台 | — |
 
 ```
 netstandard2.0 ┃ MdLib ───────────────────┐
 ───────────────╂──────────────────────────┼──────
 net472 および  ┃ SvgWpf ── SharpVectors    │
 net9.0-windows ┃    └───────────────── MdWpf
-               ┃ ImgWpf ──────────────────┘
+               ┃ ImgWpf ──────────────────┤
+───────────────╂──────────────────────────┼──────
+netstandard2.0 ┃ SvgAvalonia ── Svg.Skia   │
+（Avalonia）   ┃    └───────────────── MdAvalonia
+               ┃ ImgAvalonia ── SkiaSharp ─┘
 ```
 
 **解析（MdLib）と描画（MdWpf）を分離しています。** WPF は .NET Standard 2.0 に含まれない
@@ -37,8 +47,9 @@ net9.0-windows ┃    └───────────────── MdW
 
 C# は全プロジェクト `LangVersion 7.3`（Unity 対応のため）。
 
-このソリューションは自己完結しています。外部依存は SharpVectors だけで、他の自作
-ライブラリには一切依存していません。`MdViewer.sln` を開けばそのままビルドできます。
+このソリューションは自己完結しています。外部依存は SharpVectors（WPF 版）と
+Avalonia・Svg.Skia・SkiaSharp（Avalonia 版）だけで、他の自作ライブラリには一切依存していません。
+`MdViewer.sln` を開けばそのままビルドできます。
 
 ---
 
@@ -49,7 +60,13 @@ dotnet build MdViewer.sln
 ```
 
 Visual Studio 2022 で `MdViewer.sln` を開いてビルドしても同じです。
-初回は NuGet の復元が必要です（SharpVectors）。
+初回は NuGet の復元が必要です（SharpVectors、Avalonia ほか）。
+
+Avalonia 版のテスト台は、どの OS でも次で起動できます（引数にファイルを渡すと開く）。
+
+```bash
+dotnet run --project TestAvalonia -- MdViewerApp/Samples/report.md
+```
 
 ---
 
@@ -317,6 +334,43 @@ image.Source = ImgRender.FromFile(photo, 600);
 
 ---
 
+## Avalonia 版 — MdAvalonia / SvgAvalonia / ImgAvalonia
+
+WPF 版と同じ名前・同じ使い方にしてあります（名前空間だけが違う）。Windows / macOS / Linux で動きます。
+
+```csharp
+using MdAvalonia;
+
+var viewer = new MdViewer();
+viewer.LoadFile(path);          // BasePath も設定され、相対パスの画像を解決する
+viewer.Zoom = 150;              // 20〜200（％）
+
+Control view = MdFlow.ToControl(markdownText);   // コントロールに変換するだけ
+```
+
+```csharp
+using SvgAvalonia;   // new SvgViewer { Source = path } / SvgRender.FromFile(path) → IImage
+using ImgAvalonia;   // new ImgViewer { Source = path } / ImgRender.From(path, 600) → Bitmap
+```
+
+### WPF 版との違い
+
+| 項目 | WPF 版 | Avalonia 版 |
+|---|---|---|
+| Markdown の描画 | FlowDocument | ブロックごとの部品（`MdTextBlock` など）を縦に並べる |
+| 文字の選択 | 文書全体をまたいで選べる | **段落・セルの中でだけ選べる** |
+| リンク | `Hyperlink` | 文字範囲を覚えて当たり判定する（折り返したリンクも押せる） |
+| リンクを押したとき | `Process.Start` | `TopLevel.Launcher`。`MdStyle.OpenLink` で差し替えられる |
+| SVG の大きさ | 描かれた範囲に詰める | **SVG の width / height のとおり**（余白も含む） |
+| 画像の幅 | `ImageMaxWidth` まで | `ImageMaxWidth` と**表示幅の小さいほう**（狭い欄でははみ出さず縮む） |
+| http の画像 | 読み込みは WPF 任せ | 取りに行く間は alt を出し、届いたら差し替える |
+| tif / heic など | WIC（OS のコーデック） | SkiaSharp で読めない形式は、Windows ではサムネイルで代わりに出す |
+| 動画 | Windows のサムネイル | 同じ。**Windows 以外では出ない**（`null`） |
+
+EXIF の向きは SkiaSharp が読んだ値を当てています（8 通りとも実測で確認）。
+
+---
+
 ## WinForms から使う
 
 `ElementHost` を挟めば WinForms からも使えます。
@@ -549,6 +603,17 @@ SharpVectors.Runtime.Wpf.dll
 `SharpVectors.Rendering.Gdi.dll` は NuGet が同梱しますが参照チェーンのどこからも使われていないため、
 配布時は除外できます（削除した構成で動作確認済み）。
 
+Avalonia 版は、Avalonia 本体（アプリ側が持つ）に加えて次が要ります。
+
+```
+MdLib.dll  MdAvalonia.dll  SvgAvalonia.dll  ImgAvalonia.dll
+Avalonia.Svg.Skia.dll  Svg.Skia.dll  Svg.Model.dll  Svg.Custom.dll  ShimSkiaSharp.dll  ExCSS.dll
+SkiaSharp.dll  SkiaSharp.HarfBuzz.dll  HarfBuzzSharp.dll（＋ OS ごとのネイティブ DLL）
+```
+
+**SkiaSharp は 3.116.1 になります**（Avalonia.Svg.Skia 11.3.0 がこの版を要求するため）。
+Avalonia 11.3 は SkiaSharp 3 でも動きます（実測）。
+
 ---
 
 ## 既知の注意点
@@ -562,7 +627,8 @@ SharpVectors.Runtime.Wpf.dll
   同期的に描くと、その分 UI が止まります（キャッシュ機構は持たせていません。OS 側の
   サムネイルキャッシュに任せています）
 - 動画は静止画のサムネイルです。**再生機能はありません**
-- リンクのクリックは既定のブラウザで開きます（`Process.Start`）
+- リンクのクリックは既定のブラウザで開きます（`Process.Start`）。Avalonia 版は `TopLevel.Launcher` を使い、
+  `MdStyle.OpenLink` に処理を渡せばホスト側で開けます
 
 ---
 
@@ -573,5 +639,16 @@ SharpVectors.Runtime.Wpf.dll
 SVG の解析に使っている [SharpVectors](https://github.com/ElinamLLC/SharpVectors) は
 BSD-3-Clause（Copyright (c) 2010 - 2024 Elinam LLC）です。SharpVectors の DLL を同梱して
 再配布する場合は、そちらの著作権表示とライセンス条文も併せて添付してください。
+
+Avalonia 版が使う外部ライブラリと、そのライセンスは次のとおりです。DLL を同梱して再配布する場合は、
+それぞれの著作権表示とライセンス条文も添付してください。
+
+| ライブラリ | ライセンス |
+|---|---|
+| [Avalonia](https://github.com/AvaloniaUI/Avalonia) | MIT |
+| [Avalonia.Svg.Skia / Svg.Skia / Svg.Model / ShimSkiaSharp](https://github.com/wieslawsoltes/Svg.Skia) | MIT |
+| **Svg.Custom**（[SVG.NET](https://github.com/svg-net/SVG) の派生） | **MS-PL** |
+| [ExCSS](https://github.com/TylerBrinks/ExCSS) | MIT |
+| [SkiaSharp / HarfBuzzSharp](https://github.com/mono/SkiaSharp) | MIT |
 
 `MdLib` は外部依存がないため、Markdown 解析だけを使う場合は MIT のみで完結します。

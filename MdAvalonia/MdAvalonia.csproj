@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Authors>Keiji Mitsubuchi</Authors>
+    <Description>Markdown renderer for Avalonia</Description>
+    <Copyright>Keiji Mitsubuchi</Copyright>
+    <Company>Virtual IP Production</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 解析は MdLib、Markdown 内の .svg 画像は SvgAvalonia、
+         それ以外の画像と動画サムネイルは ImgAvalonia に任せる（MdWpf と同じ分担） -->
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <ProjectReference Include="..\MdLib\MdLib.csproj" />
+    <ProjectReference Include="..\SvgAvalonia\SvgAvalonia.csproj" />
+    <ProjectReference Include="..\ImgAvalonia\ImgAvalonia.csproj" />
+  </ItemGroup>
+
+</Project>
