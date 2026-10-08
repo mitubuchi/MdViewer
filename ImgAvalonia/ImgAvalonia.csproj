@@ -17,6 +17,12 @@
          版は SvgAvalonia が使う Svg.Skia に合わせる -->
     <PackageReference Include="Avalonia" Version="11.3.9" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
+    <!--
+      Linux のネイティブ部品は SkiaSharp 本体から辿られず、Avalonia が持ち込む 2.88.9 のままになる。
+      管理側（3.116.1）と版が食い違うと Linux で描けないので、ここで揃える。
+      Windows と macOS のぶんは SkiaSharp 本体が連れてくる。
+    -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
   </ItemGroup>
 
 </Project>
